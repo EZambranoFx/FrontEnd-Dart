@@ -180,6 +180,63 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
+class AdminPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Página de Administrador'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text('Lista de Citas'),
+            SizedBox(height: 20),
+            Expanded(
+              child: SingleChildScrollView(
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('Fecha')),
+                    DataColumn(label: Text('Hora')),
+                    DataColumn(label: Text('Descripción')),
+                    DataColumn(label: Text('Acciones')),
+                  ],
+                  rows: [
+                    DataRow(cells: [
+                      DataCell(Text('2024-08-25')),
+                      DataCell(Text('10:00 AM')),
+                      DataCell(Text('Cita de ejemplo')),
+                      DataCell(Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () {
+                              // Aquí iría la funcionalidad para modificar
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              // Aquí iría la funcionalidad para eliminar
+                            },
+                          ),
+                        ],
+                      )),
+                    ]),
+                    // Puedes agregar más filas de ejemplo aquí
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -339,6 +396,16 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             },
             child: Text('Cerrar sesión'),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AdminPage()),
+              );
+            },
+            child: Text('Ir a la Página de Administrador'),
           ),
         ],
       ),
