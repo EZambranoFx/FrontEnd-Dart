@@ -25,8 +25,47 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   DateTime _selectedDate = DateTime.now();
-  final _appointments = <DateTime, List<String>>{};
+  final _appointments = <DateTime, List<Map<String, String>>>{};
   final _appointmentController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _serviceController = TextEditingController();
+  final _timeController = TextEditingController();
+  final _notesController = TextEditingController();
+  bool _showPanel = false;
+  String _action = 'Agregar';
+
+  void _togglePanel(String action) {
+    setState(() {
+      _action = action;
+      _showPanel = !_showPanel;
+    });
+  }
+
+  void _saveAppointment() {
+    final appointment = {
+      'name': _nameController.text,
+      'service': _serviceController.text,
+      'time': _timeController.text,
+      'notes': _notesController.text,
+    };
+    if (_appointments.containsKey(_selectedDate)) {
+      _appointments[_selectedDate]!.add(appointment);
+    } else {
+      _appointments[_selectedDate] = [appointment];
+    }
+
+    setState(() {
+      _showPanel = false;
+      _nameController.clear();
+      _serviceController.clear();
+      _timeController.clear();
+      _notesController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Cita guardada exitosamente!')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,38 +92,78 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _appointmentController,
-              decoration: InputDecoration(
-                labelText: 'Nueva cita',
-                border: OutlineInputBorder(),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: () => _togglePanel('Agregar'),
+                child: Text('Agregar cita'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () => _togglePanel('Modificar'),
+                child: Text('Modificar cita'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    if (_appointments.containsKey(_selectedDate)) {
+                      _appointments.remove(_selectedDate);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Cita eliminada!')),
+                      );
+                    }
+                  });
+                },
+                child: Text('Eliminar cita'),
+              ),
+            ],
+          ),
+          if (_showPanel) ...[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Nombre del cliente'),
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(border: OutlineInputBorder()),
+                  ),
+                  SizedBox(height: 8),
+                  Text('Tipo de servicio'),
+                  TextField(
+                    controller: _serviceController,
+                    decoration: InputDecoration(border: OutlineInputBorder()),
+                  ),
+                  SizedBox(height: 8),
+                  Text('Hora de la cita'),
+                  TextField(
+                    controller: _timeController,
+                    decoration: InputDecoration(border: OutlineInputBorder()),
+                  ),
+                  SizedBox(height: 8),
+                  Text('Notas'),
+                  TextField(
+                    controller: _notesController,
+                    decoration: InputDecoration(border: OutlineInputBorder()),
+                  ),
+                  SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _saveAppointment,
+                    child: Text('Guardar'),
+                  ),
+                ],
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final appointment = _appointmentController.text;
-              if (appointment.isNotEmpty) {
-                setState(() {
-                  if (_appointments.containsKey(_selectedDate)) {
-                    _appointments[_selectedDate]!.add(appointment);
-                  } else {
-                    _appointments[_selectedDate] = [appointment];
-                  }
-                  _appointmentController.clear();
-                });
-              }
-            },
-            child: Text('Agregar cita'),
-          ),
+          ],
           Expanded(
             child: ListView(
               children: _appointments.entries
                   .where((entry) => isSameDay(entry.key, _selectedDate))
                   .expand((entry) => entry.value.map((app) => ListTile(
-                        title: Text(app),
+                        title: Text('${app['name']} - ${app['service']}'),
+                        subtitle: Text('Hora: ${app['time']} \nNotas: ${app['notes']}'),
                       )))
                   .toList(),
             ),
