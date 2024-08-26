@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),  // Establece LoginPage como la pantalla principal
+      home: LoginPage(), // Establece LoginPage como la pantalla principal
     );
   }
 }
@@ -67,7 +67,9 @@ class _LoginPageState extends State<LoginPage> {
                   if (username.isNotEmpty && password.isNotEmpty) {
                     // Simulación de inicio de sesión exitoso
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Inicio de sesión exitoso para $username')),
+                      SnackBar(
+                          content:
+                              Text('Inicio de sesión exitoso para $username')),
                     );
                     Navigator.push(
                       context,
@@ -75,7 +77,9 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Por favor, completa todos los campos')),
+                      SnackBar(
+                          content:
+                              Text('Por favor, completa todos los campos')),
                     );
                   }
                 },
@@ -158,7 +162,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   if (username.isNotEmpty && password.isNotEmpty) {
                     // Simulación de registro exitoso
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Registro exitoso para $username')),
+                      SnackBar(
+                          content: Text('Registro exitoso para $username')),
                     );
                     Navigator.push(
                       context,
@@ -166,7 +171,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Por favor, completa todos los campos')),
+                      SnackBar(
+                          content:
+                              Text('Por favor, completa todos los campos')),
                     );
                   }
                 },
@@ -236,7 +243,6 @@ class AdminPage extends StatelessWidget {
   }
 }
 
-
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -244,8 +250,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay? _selectedTime;
   final _appointments = <DateTime, List<Map<String, String>>>{};
-  final _appointmentController = TextEditingController();
   final _nameController = TextEditingController();
   final _serviceController = TextEditingController();
   final _timeController = TextEditingController();
@@ -258,32 +264,65 @@ class _MyHomePageState extends State<MyHomePage> {
       _action = action;
       _showPanel = !_showPanel;
     });
+
+    if (action == 'Agregar') {
+      _selectTime(); // Open the time picker if adding a new appointment
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final timeOfDay = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (timeOfDay != null) {
+      setState(() {
+        _selectedTime = timeOfDay;
+        _timeController.text = timeOfDay.format(context);
+      });
+    }
   }
 
   void _saveAppointment() {
-    final appointment = {
-      'name': _nameController.text,
-      'service': _serviceController.text,
-      'time': _timeController.text,
-      'notes': _notesController.text,
-    };
-    if (_appointments.containsKey(_selectedDate)) {
-      _appointments[_selectedDate]!.add(appointment);
+    if (_selectedTime != null) {
+      final appointment = {
+        'name': _nameController.text,
+        'service': _serviceController.text,
+        'time': _timeController.text,
+        'notes': _notesController.text,
+      };
+      final dateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
+      );
+
+      if (_appointments.containsKey(dateTime)) {
+        _appointments[dateTime]!.add(appointment);
+      } else {
+        _appointments[dateTime] = [appointment];
+      }
+
+      setState(() {
+        _showPanel = false;
+        _nameController.clear();
+        _serviceController.clear();
+        _timeController.clear();
+        _notesController.clear();
+        _selectedTime = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cita guardada exitosamente!')),
+      );
     } else {
-      _appointments[_selectedDate] = [appointment];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, seleccione una hora.')),
+      );
     }
-
-    setState(() {
-      _showPanel = false;
-      _nameController.clear();
-      _serviceController.clear();
-      _timeController.clear();
-      _notesController.clear();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Cita guardada exitosamente!')),
-    );
   }
 
   @override
@@ -360,6 +399,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   TextField(
                     controller: _timeController,
                     decoration: InputDecoration(border: OutlineInputBorder()),
+                    readOnly: true,
                   ),
                   SizedBox(height: 8),
                   Text('Notas'),
@@ -382,7 +422,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   .where((entry) => isSameDay(entry.key, _selectedDate))
                   .expand((entry) => entry.value.map((app) => ListTile(
                         title: Text('${app['name']} - ${app['service']}'),
-                        subtitle: Text('Hora: ${app['time']} \nNotas: ${app['notes']}'),
+                        subtitle: Text(
+                            'Hora: ${app['time']} \nNotas: ${app['notes']}'),
                       )))
                   .toList(),
             ),
